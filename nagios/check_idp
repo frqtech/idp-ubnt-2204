@@ -1,0 +1,246 @@
+#!/bin/bash
+
+#title          check_idp
+#description    Use Shibboleht IDP Status page to generate statistics
+#author         Rui Ribeiro - rui.ribeiro@cafe.rnp.br
+#date           2021/11/11
+#version        2.0
+#changelog      1.0 - 2018/06/06 - Initial version
+#changelog      2.0 - 2021/11/11 - Shibboleth 4 initial version
+
+#Centreon exit codes
+#0 - ok
+#1 - warning
+#2 - critical
+#3 - unknow
+
+IDPSTATUSURL="$1"
+MODE="$2"
+IDPSTATUSURLOUT="/tmp/idp-monitoramento-out.$$"
+RET=""
+
+function getApacheCertExpiration {
+
+    DT_ATENCAO=30
+    DT_ERRO=0
+
+    CRT=`grep "SSLCertificateFile" /etc/apache2/sites-enabled/01-idp.conf | awk '{ print $2}'`
+    CRT_EXP=`openssl x509 -in ${CRT} -text -noout | grep "After" | awk -F' : ' '{ print $2 }'`
+    CRT_EXP_EPOCH=`date -d"${CRT_EXP}" +%s`
+    DT_NOW=`date +%s`
+    DT_DIFF=`expr ${CRT_EXP_EPOCH} - ${DT_NOW}`
+    DT_DIFF_DAYS=`expr ${DT_DIFF} / 86400`
+    if [ ${DT_DIFF_DAYS} -gt ${DT_ATENCAO} ] ; then
+      STATUS="OK"
+    elif [ ${DT_DIFF_DAYS} -lt ${DT_ATENCAO} -a ${DT_DIFF_DAYS} -gt ${DT_ERRO} ] ; then
+      STATUS="ATENCAO"
+    else
+      STATUS="ERRO"
+    fi
+
+    echo "${STATUS} - Certificado do Apache expirara em ${DT_DIFF_DAYS} dia(s) (${CRT_EXP})"
+
+}
+
+function getStatusPage {
+
+    curl -k -s -i ${IDPSTATUSURL} > ${IDPSTATUSURLOUT}
+    RET=`grep "HTTP/1.1" ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    if [ "${RET}" != "200" ] ; then
+        echo "ERRO - Falha ao acessar ${IDPSTATUSURL}"
+        rm -rf ${IDPSTATUSURLOUT}
+        exit 2
+    fi
+}
+
+function getIdpLastMetadataUpdate {
+
+    getStatusPage
+    RET=`grep -A3 ShibbolethMetadata ${IDPSTATUSURLOUT} | grep update | awk '{ print $3 }'`
+    echo "OK - Ultima atualizacao de metadado em ${RET}"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getIdpStatus {
+
+    getStatusPage
+    RET=`grep "HTTP/1.1" ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    if [ "${RET}" = "200" ] ; then
+        echo "OK - O IDP esta operacional"
+    fi
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getIdpUptime {
+
+    getStatusPage
+    RET=`grep start_time ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    DT_START_EPOCH=`date -d ${RET} +%s`
+    DT_NOW_EPOCH=`date +%s`
+    DT_DIFF=`expr ${DT_NOW_EPOCH} - ${DT_START_EPOCH}`
+    DT_DIFF_DAYS=`expr ${DT_DIFF} / 86400`
+    DT_DIFF_MS=`expr ${DT_DIFF} \* 1000`
+    echo "OK - Uptime do IDP: ${DT_DIFF_DAYS} dia(s) (${DT_DIFF_MS} ms)|uptime=${DT_DIFF_MS}"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getIdpVersion {
+
+    getStatusPage
+    RET=`grep idp_version ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    echo "OK - Versao do IDP: ${RET}"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getJdkVersion {
+
+    getStatusPage
+    RET=`grep jdk_version ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    echo "OK - Versao do JDK: ${RET}"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getLdapBindStatus {
+
+    LDAP_URL=`grep "^idp.authn.LDAP.ldapURL" /opt/shibboleth-idp/conf/ldap.properties | awk '{ print $3}'`
+    LDAP_BIND_DN=`grep "^idp.authn.LDAP.bindDN" /opt/shibboleth-idp/conf/ldap.properties | awk '{ print $3}'`
+    LDAP_PWD=`grep "^idp.authn.LDAP.bindDNCredential" /opt/shibboleth-idp/credentials/secrets.properties | awk '{ print $3 }'`
+
+    LDAP_BIND=`ldapwhoami -H "${LDAP_URL}" -D "${LDAP_BIND_DN}" -w "${LDAP_PWD}"`
+    if [ $? -eq "0" ] ; then
+         echo "OK - Bind realizado com sucesso no LDAP."
+     else
+         echo "ERRO - Falha ao realizar bind no LDAP."
+     fi
+
+}
+
+function getOsCores {
+
+    getStatusPage
+    RET=`grep available_cores ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    echo "OK - Cores disponiveis: ${RET}"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getOsKernelVersion {
+
+    getStatusPage
+    RET=`grep operating_system_version ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    echo "OK - Versao do Kernel: ${RET}"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getOsMemoryMax {
+
+    getStatusPage
+    RET=`grep maximum_memory ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    echo "OK - Memoria total: ${RET} MB"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getOsMemoryUsed {
+
+    getStatusPage
+    RET=`grep used_memory ${IDPSTATUSURLOUT} | awk '{ print $2 }'`
+    echo "OK - Memoria utilizada: ${RET} MB"
+    rm -rf ${IDPSTATUSURLOUT}
+
+}
+
+function getAll {
+
+    getApacheCertExpiration
+    getIdpStatus
+    getOsCores
+    getOsKernelVersion
+    getOsMemoryMax
+    getOsMemoryUsed
+    getJdkVersion
+    getIdpVersion
+    getIdpUptime
+    getIdpLastMetadataUpdate
+#    getLdapBindStatus
+
+}
+
+function getHelp {
+
+    echo ""
+    echo "USO: check_idp UrlDaPaginaDeStatus Opcao"
+    echo "     Exemplo: check_idp https://login.ufrgs.br/idp/status all"
+    echo ""
+    echo "Opcoes disponiveis"
+    echo ""
+    echo "  all - todas as opcoes"
+    echo "  apachecertexpiration - validade do certificado do apache"
+    echo "  idplastmetadata - ultima atualizacao dos arquivos de metadados"
+    echo "  idpstatus - status do IDP"
+    echo "  idpuptime - tempo transcorrido desde a inicializacao do IDP"
+    echo "  idpversion - versao do IDP"
+    echo "  jdkversion - versao do JDK"
+#    echo "  ldapbindstatus - status do bind no diretorio"
+    echo "  oskernelversion - versao do kernel do sistema operacional"
+    echo "  oscores - numero de cores disponiveis no servidor"
+    echo "  osmemorymax - total de memoria do servidor"
+    echo "  osmemoryused - total de memoria em uso no servidor"
+    echo ""
+
+}
+
+function invalidOption {
+
+    echo ""
+    echo "ERRO - opcao e/ou sintaxe invalida!"
+    getHelp
+    exit 3
+
+}
+
+if [ "${IDPSTATUSURL}" = "help" ] ; then
+
+    getHelp
+    exit 0
+
+fi
+
+case ${MODE} in
+    all)
+        getAll ;;
+    help)
+        getHelp ;;
+    apachecertexpiration)
+        getApacheCertExpiration ;;
+    idplastmetadata)
+        getIdpLastMetadataUpdate ;;
+    idpstatus)
+        getIdpStatus ;;
+    idpuptime)
+        getIdpUptime ;;
+    idpversion)
+        getIdpVersion ;;
+    jdkversion)
+        getJdkVersion ;;
+#    ldapbindstatus)
+#        getLdapBindStatus ;;
+    oskernelversion)
+        getOsKernelVersion ;;
+    oscores)
+        getOsCores ;;
+    osmemorymax)
+        getOsMemoryMax ;;
+    osmemoryused)
+        getOsMemoryUsed ;;
+    *)
+        invalidOption ;;
+esac
+
+exit 0

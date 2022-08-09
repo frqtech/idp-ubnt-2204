@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<AttributeResolver xmlns="urn:mace:shibboleth:2.0:resolver"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mace:shibboleth:2.0:resolver http://shibboleth.net/schema/idp/shibboleth-attribute-resolver.xsd">
+
+    <!-- ========================================== -->
+    <!--      Attribute Definitions                 -->
+    <!-- ========================================== -->
+
+    <!-- CAFe - uid -->
+    <AttributeDefinition id="uid" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="uid" />
+    </AttributeDefinition>
+
+    <!-- CAFe - uidMD5 -->
+    <AttributeDefinition id="uidMD5" xsi:type="ScriptedAttribute" dependencyOnly="true">
+        <InputDataConnector ref="dcLDAP" attributeNames="%{idp.authn.LDAP.returnAttributes}" />
+        <Script>
+            <![CDATA[
+                uidMD5.getValues().clear();
+                logger = Java.type("org.slf4j.LoggerFactory").getLogger("net.shibboleth.idp.attribute");
+                if (typeof %{idp.authn.LDAP.returnAttributes} != "undefined" && %{idp.authn.LDAP.returnAttributes} != null ){
+                    localpart = org.apache.commons.codec.digest.DigestUtils.md5Hex(%{idp.authn.LDAP.returnAttributes}.getValues().get(0));
+                    uidMD5.getValues().add(localpart);
+                    logger.info("%{idp.authn.LDAP.returnAttributes}: "+%{idp.authn.LDAP.returnAttributes}.getValues().get(0)+" md5: "+localpart);
+                }
+            ]]>
+        </Script>
+    </AttributeDefinition>
+
+    <!-- CAFe - commonName -->
+    <AttributeDefinition id="cn" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="cn" />
+    </AttributeDefinition>
+
+    <!-- CAFe - displayName -->
+    <AttributeDefinition id="displayName" xsi:type="Template">
+        <InputDataConnector ref="dcLDAP" attributeNames="givenName sn" />
+        <Template>${givenName} ${sn}</Template>
+    </AttributeDefinition>
+
+    <!-- CAFe - givenName -->
+    <AttributeDefinition id="givenName" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="givenName" />
+    </AttributeDefinition>
+
+    <!-- CAFe - surName -->
+    <AttributeDefinition id="sn" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="sn" />
+    </AttributeDefinition>
+
+    <!-- CAFe - mail -->
+    <AttributeDefinition id="mail" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="mail" />
+    </AttributeDefinition>
+
+    <!-- CAFe - eduPersonEntitlement -->
+    <AttributeDefinition id="eduPersonEntitlement" xsi:type="Simple">
+        <InputDataConnector ref="staticAttributes" attributeNames="eduPersonEntitlement" />
+    </AttributeDefinition>
+
+    <!-- CAFe - brPersonCPF -->
+    <AttributeDefinition id="brPersonCPF" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="brPersonCPF" />
+    </AttributeDefinition>
+
+    <!-- CAFe - schacDateOfBirth -->
+    <AttributeDefinition id="schacDateOfBirth" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAP" attributeNames="schacDateOfBirth" />
+    </AttributeDefinition>
+
+    <!-- CAFe - eduPersonPrincipalName -->
+    <AttributeDefinition id="eduPersonPrincipalName" xsi:type="Scoped" scope="%{idp.scope}">
+        <InputAttributeDefinition ref="uidMD5" />
+    </AttributeDefinition>
+
+    <!-- CAFe - eduPersonTargetedID -->
+    <AttributeDefinition id="eduPersonTargetedID" xsi:type="SAML2NameID" nameIdFormat="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">
+        <InputDataConnector ref="ComputedIDConnector" attributeNames="ComputedID" />
+    </AttributeDefinition>
+
+    <!-- CAFe - brEduAffiliationType -->
+    <AttributeDefinition id="brEduAffiliationType" xsi:type="Simple">
+        <InputDataConnector ref="dcLDAPBrEduPerson" attributeNames="brEduAffiliationType" />
+    </AttributeDefinition>
+
+    <!-- CAFe - eduPersonAffiliation -->
+    <AttributeDefinition id="eduPersonAffiliation" xsi:type="Mapped">
+        <InputAttributeDefinition ref="brEduAffiliationType" />
+        <DefaultValue passThru="true" />
+        <ValueMap>
+            <ReturnValue>affiliate</ReturnValue>
+            <SourceValue>other</SourceValue>
+            <SourceValue>position</SourceValue>
+            <SourceValue>scholarshipAwardee</SourceValue>
+        </ValueMap>
+    </AttributeDefinition>
+
+    <!-- ========================================== -->
+    <!--      Data Connectors                       -->
+    <!-- ========================================== -->
+
+    <DataConnector id="dcLDAP" xsi:type="LDAPDirectory" ldapURL="%{idp.attribute.resolver.LDAP.ldapURL}" baseDN="%{idp.attribute.resolver.LDAP.baseDN}" principal="%{idp.attribute.resolver.LDAP.bindDN}" principalCredential="%{idp.attribute.resolver.LDAP.bindDNCredential}" useStartTLS="%{idp.attribute.resolver.LDAP.useStartTLS:true}" noResultIsError="%{idp.attribute.resolver.LDAP.noResultsIsError:false}" multipleResultsIsError="%{idp.attribute.resolver.LDAP.multipleResultsIsError:true}">
+        <FilterTemplate>
+            <![CDATA[
+                %{idp.attribute.resolver.LDAP.searchFilter}
+            ]]>
+        </FilterTemplate>
+        <ReturnAttributes>%{idp.authn.LDAP.returnAttributes} mail cn givenName sn brPersonCPF schacDateOfBirth</ReturnAttributes>
+    </DataConnector>
+
+    <DataConnector id="dcLDAPBrEduPerson" xsi:type="LDAPDirectory" ldapURL="%{idp.attribute.resolver.LDAP.ldapURL}" baseDN="%{idp.attribute.resolver.LDAP.baseDN}" principal="%{idp.attribute.resolver.LDAP.bindDN}" principalCredential="%{idp.attribute.resolver.LDAP.bindDNCredential}" useStartTLS="%{idp.attribute.resolver.LDAP.useStartTLS:true}" noResultIsError="%{idp.attribute.resolver.LDAP.noResultsIsError:false}" multipleResultsIsError="%{idp.attribute.resolver.LDAP.multipleResultsIsError:true}">
+        <FilterTemplate>
+            <![CDATA[
+                (&(&(%{idp.authn.LDAP.returnAttributes}:dn:=$resolutionContext.getPrincipal())(brEduAffiliation=*))(&(brEntranceDate=*)(!(brExitDate=*))))
+            ]]>
+        </FilterTemplate>
+        <ReturnAttributes>brEduAffiliationType</ReturnAttributes>
+    </DataConnector>
+
+    <DataConnector id="ComputedIDConnector" xsi:type="ComputedId" generatedAttributeID="ComputedID" salt="%{idp.cafe.computedIDsalt}">
+        <InputDataConnector ref="dcLDAP" attributeNames="%{idp.authn.LDAP.returnAttributes}" />
+    </DataConnector>
+
+    <DataConnector id="staticAttributes" xsi:type="Static">
+        <Attribute id="eduPersonEntitlement">
+            <Value>urn:mace:rediris.es:entitlement:wiki:tfemc2</Value>
+        </Attribute>
+    </DataConnector>
+
+</AttributeResolver>

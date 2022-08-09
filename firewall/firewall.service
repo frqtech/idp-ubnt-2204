@@ -1,0 +1,11 @@
+[Unit]
+Description=Firewall Basico - RNP/CAFe - v1.0
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/rnp/firewall/firewall.sh start
+ExecStop=/opt/rnp/firewall/firewall.sh stop
+
+[Install]
+WantedBy=multi-user.target
