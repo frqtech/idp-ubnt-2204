@@ -12,12 +12,13 @@
 #changelog          4.1.1 - 2022/01/26 - Shibboleth IDP 4.1.5.
 #changelog          4.1.2 - 2022/04/19 - Shibboleth IDP 4.2.1.
 #changelog          4.2.0 - 2022/08/08 - Initial version for Ubuntu 22.04.
+#changelog          4.2.1 - 2023/02/20 - Shibboleth IDP 4.3.0.
 
 RET=""
 DEBUG="1"
 F_DEBUG="/root/cafe-firstboot.debug"
 REPOSITORY="https://raw.githubusercontent.com/frqtech/idp-ubnt-2204/main"
-SRCDIR="/root/shibboleth-identity-provider-4.2.1"
+SRCDIR="/root/shibboleth-identity-provider-4.3.0"
 SHIBDIR="/opt/shibboleth-idp"
 
 function cleanup {
