@@ -18,7 +18,7 @@ RET=""
 DEBUG="1"
 F_DEBUG="/root/cafe-firstboot.debug"
 REPOSITORY="https://raw.githubusercontent.com/frqtech/idp-ubnt-2204/main"
-SRCDIR="/root/shibboleth-identity-provider-4.3.0"
+SRCDIR="/root/shibboleth-identity-provider-4.3.1"
 SHIBDIR="/opt/shibboleth-idp"
 
 function cleanup {
@@ -113,19 +113,19 @@ function lerOpcoes {
 }
 
 function lerURL {
-	ler "$1" "$2"
-	urlvalida=$(echo $RET | egrep '^https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]')
-	while [ "$urlvalida" == "" ] ; do
-		echo "ERRO - A URL informada não é valida."
-		ler "$1" "$2"
-		urlvalida=$(echo $RET | egrep '^https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]')
-	done
+    ler "$1" "$2"
+    urlvalida=$(echo $RET | egrep '^https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]')
+    while [ "$urlvalida" == "" ] ; do
+        echo "ERRO - A URL informada não é valida."
+        ler "$1" "$2"
+        urlvalida=$(echo $RET | egrep '^https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]')
+    done
 }
 
 function setProperty {
-	#Based on: https://gist.github.com/kongchen/6748525
-	awk -v pat="^$1 ?=" -v value="$1 = $2" '{ if ($0 ~ pat) print value; else print $0; }' $3 > $3.tmp
-	mv $3.tmp $3
+    #Based on: https://gist.github.com/kongchen/6748525
+    awk -v pat="^$1 ?=" -v value="$1 = $2" '{ if ($0 ~ pat) print value; else print $0; }' $3 > $3.tmp
+    mv $3.tmp $3
 }
 
 function confirma {
@@ -289,8 +289,8 @@ EOF
 
         hostnamectl set-hostname ${HN}.${HN_DOMAIN}
 
-    # Ajuste Stub DNS
-   ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+        # Ajuste Stub DNS
+        ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
     fi
 
@@ -305,34 +305,34 @@ EOF
     netplan apply
     sleep 5
     
-       THRESHOLD=3
-       TRY=1
+        THRESHOLD=3
+        TRY=1
        
-       while [ ${TRY} -le ${THRESHOLD} ] ; do
+        while [ ${TRY} -le ${THRESHOLD} ] ; do
         NETTEST=`curl -s ${REPOSITORY}/network.test`
-           if [ "${NETTEST}" = "Network test OK." ] ; then
-               apt update
-               apt dist-upgrade -y
-               break
-           else
-               echo "ATENCAO - Falha no teste de comunicacao de rede - ${TRY}/${THRESHOLD}"
-               if [ ${TRY} -lt ${THRESHOLD} ] ; then
-                   echo "          Nova tentativa em 5 segundos..."
-                   sleep 5
+            if [ "${NETTEST}" = "Network test OK." ] ; then
+                apt update
+                apt dist-upgrade -y
+                break
+            else
+                echo "ATENCAO - Falha no teste de comunicacao de rede - ${TRY}/${THRESHOLD}"
+                if [ ${TRY} -lt ${THRESHOLD} ] ; then
+                    echo "          Nova tentativa em 5 segundos..."
+                    sleep 5
                 netplan apply
-               else
-                   echo ""
-                   echo "ATENCAO - Nao foi possivel testar a comunicacao com a rede."
-                   echo "          Nao sera executada a rotina de atualizacao dos pacotes."
-                   echo ""
-                   echo "          Caso queira interromper a instalacao para verificar este"
-                   echo "          problema utilize o comando CTRL+C"
-                   echo ""
-                   read -p "          Pressione [enter] para continuar..."
+                else
+                    echo ""
+                    echo "ATENCAO - Nao foi possivel testar a comunicacao com a rede."
+                    echo "          Nao sera executada a rotina de atualizacao dos pacotes."
+                    echo ""
+                    echo "          Caso queira interromper a instalacao para verificar este"
+                    echo "          problema utilize o comando CTRL+C"
+                    echo ""
+                    read -p "          Pressione [enter] para continuar..."
                fi
-           fi
-           let TRY++
-       done
+            fi
+            let TRY++
+        done
    
     # Baixa arquivo remoto e verifica integridade para continuar a instalação
     wget ${REPOSITORY}/firstboot-complement.sh -O /usr/local/sbin/firstboot-complement.sh
@@ -340,7 +340,7 @@ EOF
     cd /usr/local/sbin/
     md5sum -c /usr/local/sbin/firstboot-complement.md5
 
-       if [ $? -eq "0" ] ; then
+        if [ $? -eq "0" ] ; then
         if [ ${DEBUG} -eq 1 ] ; then
             echo "O arquivo /usr/local/sbin/firstboot-complement.sh está integro." | tee -a ${F_DEBUG}
         fi
