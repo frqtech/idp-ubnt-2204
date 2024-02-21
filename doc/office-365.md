@@ -8,10 +8,10 @@ Essa página tem como objetivo auxiliar na configuração do seu Provedor de Ide
 
 A configuração ocorrerá em duas etapas:
 
-1. [Configuração no Shibbboleth IDP](#config-shib)
-2. [Configuração no Microsoft Entra](#config-entra)
+1. [Configuração no Shibbboleth IDP](#2-configuração-no-shibbboleth-idp)
+2. [Configuração no Microsoft Entra](#3-configuração-no-microsoft-entra)
 
-## 2. Configuração no Shibbboleth IDP {#config-shib}
+## 2. Configuração no Shibbboleth IDP
 
 Durante essa etapa serão manipulados os seguintes arquivos:
 
