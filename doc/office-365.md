@@ -24,7 +24,7 @@ Durante essa etapa serão manipulados os seguintes arquivos:
 * /opt/shibboleth-idp/metadata/office365-md.xml
 * /opt/shibboleth-idp/conf/attribute-filter.xml
 
-> **ATENÇÃO**
+> [!CAUTION]
 >
 > É fortemente recomendada a realização de backup do IDP antes de executar esse procedimento
 
