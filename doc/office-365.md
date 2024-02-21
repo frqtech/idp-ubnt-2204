@@ -2,7 +2,7 @@
 
 _Elaborado por Rui Ribeiro - rui.ribeiro@cafe.rnp.br_
 
-## 1. Introdução (#intro)
+## 1. Introdução
 
 Essa página tem como objetivo auxiliar na configuração do seu Provedor de Identidade Shibboleth IDP para acesso SSO junto ao Office 365.
 
