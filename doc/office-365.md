@@ -86,7 +86,7 @@ Ainda no arquivo `/opt/shibboleth-idp/conf/attribute-resolver.xml`, adicione o a
 <ReturnAttributes>%{idp.authn.LDAP.returnAttributes} mail cn givenName sn brPersonCPF schacDateOfBirth entryUUID</ReturnAttributes>
 ```
 
-> **ATENÇÃO**
+> [!IMPORTANT]
 >
 > O uso dos atributos `entryUUID` e `uid` é apropriado para ambientes OpenLDAP. Caso esteja utilizando outro diretório deve-se substituí-los pelos atributos correspondentes. Ex.: AD - entryUUID > objectGUID e uid > sAMAccountName.
 
@@ -154,7 +154,7 @@ wget https://nexus.microsoftonline-p.com/federationmetadata/saml20/federationmet
 
 O Microsoft Entra (antigamente chamada de Azure AD) é a ferramenta destinada ao gerenciamento de usuários e controle de acesso no contexte de nuvem da Microsoft.
 
-> **ATENÇÃO**
+> [!IMPORTANT]
 >
 > É necessário possuir um console PowerShell capaz de se conectar ao Microsoft Entra bem como as credenciais de administração.
 > 
@@ -171,7 +171,7 @@ Connect-MsolService
 
 3.2. Faça a definição das variáveis necessárias para a autenticação federada. 
 
-> **ATENÇÃO**
+> [!IMPORTANT]
 >
 > Fique atendo as substituições necessárias.
 
