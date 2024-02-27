@@ -152,7 +152,7 @@ wget https://nexus.microsoftonline-p.com/federationmetadata/saml20/federationmet
 
 ## 3. Configuração no Microsoft Entra
 
-O Microsoft Entra (antigamente chamada de Azure AD) é a ferramenta destinada ao gerenciamento de usuários e controle de acesso no contexte de nuvem da Microsoft.
+O Microsoft Entra (antigamente chamado de Azure AD) é a ferramenta destinada ao gerenciamento de usuários e controle de acesso no contexto de nuvem da Microsoft.
 
 > [!IMPORTANT]
 >
