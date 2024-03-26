@@ -168,6 +168,8 @@ function main {
 
 }
 
+ami=`whoami`
+
 if [ "$ami" == "root" ] ; then
     main
 else
