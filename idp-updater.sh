@@ -17,10 +17,10 @@ SO_DISTID=`lsb_release -i | awk '{ print $3 }'`
 SO_RELEASE=`lsb_release -r | awk '{ print $2 }'`
 SHIBDIR="/opt/shibboleth-idp"
 SHIBVER=`${SHIBDIR}/bin/version.sh`
-SHIBZIP="https://shibboleth.net/downloads/identity-provider/archive/4.3.1/shibboleth-identity-provider-4.3.1.zip"
-SHIBSUM="https://shibboleth.net/downloads/identity-provider/archive/4.3.1/shibboleth-identity-provider-4.3.1.zip.sha256" 
+SHIBZIP="https://shibboleth.net/downloads/identity-provider/archive/4.3.2/shibboleth-identity-provider-4.3.2.zip"
+SHIBSUM="https://shibboleth.net/downloads/identity-provider/archive/4.3.2/shibboleth-identity-provider-4.3.2.zip.sha256" 
 REPOSITORY="https://raw.githubusercontent.com/frqtech/idp-ubnt-2204/main"
-SRCDIR="/root/shibboleth-identity-provider-4.3.1"
+SRCDIR="/root/shibboleth-identity-provider-4.3.2"
 RET=""
 
 function main {
@@ -51,13 +51,13 @@ function main {
         exit 1
     fi
 
-    wget ${SHIBZIP} -O /root/shibboleth-identity-provider-4.3.1.zip 
+    wget ${SHIBZIP} -O /root/shibboleth-identity-provider-4.3.2.zip 
     if [ $? -ne 0 ] ; then
         echo "ERRO: Falha no download do arquivo ${SHIBZIP}." | tee -a ${F_LOG}
         exit 1
     fi
 
-    wget ${SHIBSUM} -O /root/shibboleth-identity-provider-4.3.1.zip.sha256 
+    wget ${SHIBSUM} -O /root/shibboleth-identity-provider-4.3.2.zip.sha256 
     if [ $? -ne 0 ] ; then
         echo "ERRO: Falha no download do arquivo ${SHIBSUM}." | tee -a ${F_LOG}
         exit 1
@@ -76,18 +76,18 @@ function main {
         exit 1
     fi
 
-    sha256sum -c /root/shibboleth-identity-provider-4.3.1.zip.sha256 
+    sha256sum -c /root/shibboleth-identity-provider-4.3.2.zip.sha256 
     if [ $? -eq 0 ] ; then
         if [ ${DEBUG} -eq 1 ] ; then
-            echo "O arquivo /root/shibboleth-identity-provider-4.3.1.zip está integro." | tee -a ${F_LOG}
+            echo "O arquivo /root/shibboleth-identity-provider-4.3.2.zip está integro." | tee -a ${F_LOG}
         fi
     else
-        echo "ERRO: O arquivo /root/shibboleth-identity-provider-4.3.1.zip não está integro." | tee -a ${F_LOG}
+        echo "ERRO: O arquivo /root/shibboleth-identity-provider-4.3.2.zip não está integro." | tee -a ${F_LOG}
         exit 1
     fi
 
     #Verifica a compatibilidade de versão do SO e do Shibboleth
-    if [ "${SO_DISTID}" = "Ubuntu" -a "${SO_RELEASE}" = "22.04" ] ; then
+    if [ "${SO_DISTID}" = "Ubuntu" -a \( "${SO_RELEASE}" = "20.04" -o "${SO_RELEASE}" = "22.04" \) ] ; then
         echo "INFO: Sistema operacional compatível." | tee -a ${F_LOG}
 
         if [ "${SHIBVER}" = "4.1.0" -o \
@@ -100,7 +100,8 @@ function main {
              "${SHIBVER}" = "4.1.7" -o \
              "${SHIBVER}" = "4.2.0" -o \
              "${SHIBVER}" = "4.2.1" -o \
-             "${SHIBVER}" = "4.3.0" \
+             "${SHIBVER}" = "4.3.0" -o \
+             "${SHIBVER}" = "4.3.1" \
              ] ; then
 
             #Faz backup da instalação atual
@@ -111,7 +112,7 @@ function main {
             fi
 
             #Executa atualização
-            unzip /root/shibboleth-identity-provider-4.3.1.zip
+            unzip /root/shibboleth-identity-provider-4.3.2.zip
             ${SRCDIR}/bin/install.sh \
             -Didp.src.dir=${SRCDIR} \
             -Didp.target.dir=${SHIBDIR}
